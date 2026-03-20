@@ -1,0 +1,42 @@
+name: Conan Setup
+description: Set up Python, install Conan from requirements.txt, and detect a Conan profile
+
+inputs:
+  python-version-file:
+    description: File containing the Python version (e.g., .tool-versions)
+    required: false
+    default: .tool-versions
+  cache-conan:
+    description: Whether to cache ~/.conan2 directory
+    required: false
+    default: "true"
+  cache-key-files:
+    description: Files to hash for cache key
+    required: false
+    default: conanfile.py requirements.txt
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version-file: ${{ inputs.python-version-file }}
+        cache: pip
+
+    - name: Install Conan
+      shell: bash
+      run: pip install -r requirements.txt
+
+    - name: Detect Conan profile
+      shell: bash
+      run: conan profile detect --force
+
+    - name: Cache Conan packages
+      if: inputs.cache-conan == 'true'
+      uses: actions/cache@v4
+      with:
+        path: ~/.conan2
+        key: conan-${{ runner.os }}-${{ hashFiles(inputs.cache-key-files) }}
+        restore-keys: |
+          conan-${{ runner.os }}-

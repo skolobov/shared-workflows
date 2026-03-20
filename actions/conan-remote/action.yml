@@ -1,0 +1,28 @@
+name: Conan Remote
+description: Configure and authenticate a Conan remote
+
+inputs:
+  remote-name:
+    description: Name of the Conan remote
+    required: true
+  remote-url:
+    description: URL of the Conan remote (without the remote name suffix)
+    required: true
+  remote-user:
+    description: Username for authentication
+    required: true
+  remote-token:
+    description: Token or password for authentication
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Configure Conan remote
+      shell: bash
+      run: |
+        conan remote add "${{ inputs.remote-name }}" \
+          "${{ inputs.remote-url }}/${{ inputs.remote-name }}"
+        conan remote login "${{ inputs.remote-name }}" \
+          "${{ inputs.remote-user }}" \
+          -p "${{ inputs.remote-token }}"

@@ -1,11 +1,17 @@
 name: Conan Setup
-description: Set up Python, install Conan from requirements.txt, and detect a Conan profile
+description: Set up Python, install Conan from requirements.txt, and configure a Conan profile
 
 inputs:
   python-version-file:
     description: File containing the Python version (e.g., .tool-versions)
     required: false
     default: .tool-versions
+  profile:
+    description: >-
+      Path to a Conan profile file to use as the default profile.
+      If not set, runs conan profile detect.
+    required: false
+    default: ""
   cache-conan:
     description: Whether to cache ~/.conan2 directory
     required: false
@@ -28,9 +34,17 @@ runs:
       shell: bash
       run: pip install -r requirements.txt
 
-    - name: Detect Conan profile
+    - name: Configure Conan profile
       shell: bash
-      run: conan profile detect --force
+      run: |
+        if [ -n "${{ inputs.profile }}" ]; then
+          mkdir -p "$(conan config home)/profiles"
+          cp "${{ inputs.profile }}" "$(conan config home)/profiles/default"
+          echo "Using profile: ${{ inputs.profile }}"
+          conan profile show
+        else
+          conan profile detect --force
+        fi
 
     - name: Cache Conan packages
       if: inputs.cache-conan == 'true'
